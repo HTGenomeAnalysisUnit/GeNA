@@ -10,10 +10,11 @@ parser.add_argument("--res_folder",type=str) # path to output folder
 parser.add_argument("--sc_object_path",type=str) # path to single-cell input object
 parser.add_argument("--covs",type=str,default=None) # list of covariates
 parser.add_argument("--corr_batch",type=bool, default=False) # whether to correct for batch 
+parser.add_argument("--sampleid",type=str, default='id') # column in obs containing sample id. Must match index name of samplem in MultiAnnData
 parser.add_argument("--ks",type=str, default=None) # user-defined values
 args = parser.parse_args()
 
-d = cna.read(args.sc_object_path)
+d = cna.read(args.sc_object_path, sampleid=sampleid)
 
 if args.covs is not None:
     args.covs = args.covs.split(",")
