@@ -14,6 +14,7 @@ parser.add_argument("--sampleid",type=str, default='id') # column in obs contain
 parser.add_argument("--ks",type=str, default=None) # user-defined values
 args = parser.parse_args()
 
+print(f"Loading data from {args.sc_object_path}")
 d = cna.read(args.sc_object_path, sampleid=sampleid)
 
 if args.covs is not None:
@@ -21,6 +22,7 @@ if args.covs is not None:
     args.covs = d.samplem[args.covs] # note: assumes provided format is cov1,cov2,cov3 and all cov names are in d.samplem.columns
 
 # build NAM, compute NAM-PCs adjusted for covariates (and batch if desired), store all NAM-PCs
+print("Computing NAM")
 if args.corr_batch:
     cna.tl.nam(d, batches=d.samplem.batch, covs=args.covs, ks=[d.samplem.shape[0]])
 else:
@@ -39,6 +41,7 @@ else:
 max_k = np.max(sel_nampcs)
 
 # save NAM-PC loadings per sample in 
+print("Save NAM-PC loading")
 nampcs = d.uns['NAM_sampleXpc'].iloc[:,:max_k]
 nampcs.insert(0,"#IID", d.samplem.index)
 nampcs.to_csv(args.res_folder+"nampcs.csv", index=False, sep = "\t")
