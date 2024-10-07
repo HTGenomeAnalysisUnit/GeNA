@@ -60,7 +60,7 @@ k_max=$(awk 'NR==1{max = $1 + 0; next} {if ($1 > max) max = $1;} END {print max}
 
 ### Applies PLINK to generate a test statistic reflecting the relationship between each allele and a single NAMPC                  
 mkdir -p ${res_folder}plink_per_nampc
-command="plink2 --pfile ${gtypes} --pheno ${res_folder}nampcs.csv --glm --prune --out ${res_folder}plink_per_nampc/NAM"
+command="plink2 --pfile ${gtypes} --pheno ${res_folder}nampcs.csv --glm allow-no-covars --prune --out ${res_folder}plink_per_nampc/NAM"
 
 echo "============================================="
 echo "[$(date)] - STEP2. Run plink association for NAMPC"
