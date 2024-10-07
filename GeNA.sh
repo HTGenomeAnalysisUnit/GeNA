@@ -6,11 +6,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 covs=""
 corr_batch="False"                                                                                                                                                               
 ks=""
+sampleid="id"
 while [[ "$#" -gt 0 ]]
   do
     case $1 in
       -s|--single_cell_data_object) sc_object="$2"; shift;;
       -g|--genotypes) gtypes="$2"; shift;;
+      -i|--sampleid) sampleid="$2"; shift;;
       -o|--output_folder) res_folder="$2"; shift;;
       -c|--covs) covs="$2"; shift;;
       -b|--corr_batch) corr_batch="$2"; shift;;
@@ -18,7 +20,7 @@ while [[ "$#" -gt 0 ]]
     esac
     shift
 done
-args_str="Genotypes: $gtypes \nSingle-cell data object: $sc_object \nOutput folder: $res_folder \nCorrect for batch: $corr_batch \n"
+args_str="Genotypes: $gtypes \nSingle-cell data object: $sc_object \nSample id: $sampleid \nOutput folder: $res_folder \nCorrect for batch: $corr_batch \n"
 if [[ -z "$covs" ]]
 then
     args_str+="Covariates: None\n"
@@ -35,7 +37,7 @@ printf "Arguments provided:\n"
 printf "$args_str"
 
 ### Format inputs to PLINK
-command="python3 -u export_nampcs.py --res_folder ${res_folder} --sc_object_path ${sc_object}"
+command="python3 -u export_nampcs.py --res_folder ${res_folder} --sc_object_path ${sc_object} --sampleid ${sampleid}"
 if [[ "$corr_batch" == "True" ]]
 then
     command+=" --corr_batch 'True'"
