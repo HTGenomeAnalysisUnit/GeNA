@@ -2,6 +2,8 @@ import argparse
 import pandas as pd
 import numpy as np
 import cna
+import multianndata as mad
+import scanpy as sc
 np.random.seed(0)
 
 # Parse Arguments                                                                                                       
@@ -15,7 +17,7 @@ parser.add_argument("--ks",type=str, default=None) # user-defined values
 args = parser.parse_args()
 
 print(f"Loading data from {args.sc_object_path}")
-d = cna.read(args.sc_object_path, sampleid=sampleid)
+d = mad.MultiAnnData(sc.read(args.sc_object_path), sampleid=sampleid)
 
 if args.covs is not None:
     args.covs = args.covs.split(",")
