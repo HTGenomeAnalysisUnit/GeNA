@@ -37,7 +37,7 @@ printf "Arguments provided:\n"
 printf "$args_str"
 
 ### Format inputs to PLINK
-command="python3 -u export_nampcs.py --res_folder ${res_folder} --sc_object_path ${sc_object} --sampleid ${sampleid}"
+command="python3 -u ${SCRIPT_DIR}/export_nampcs.py --res_folder ${res_folder} --sc_object_path ${sc_object} --sampleid ${sampleid}"
 if [[ "$corr_batch" == "True" ]]
 then
     command+=" --corr_batch 'True'"
@@ -70,7 +70,7 @@ echo "Gathering metrics across NAM-PCs"
 eval $command
 
 ### Multi-nampc test
-command="Rscript $SCRIPT_DIR/joint_test.R --outfile ${res_folder}P_k.txt \
+command="Rscript ${SCRIPT_DIR}/joint_test.R --outfile ${res_folder}P_k.txt \
          --chisq_per_nampc_file ${res_folder}t_per_nampc.txt \
          --ks_file ${res_folder}ks.csv"
 echo "Performing multi-NAM-PC tests"
