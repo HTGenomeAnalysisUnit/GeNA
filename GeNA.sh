@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -50,13 +51,19 @@ if [[ ! -z "$ks" ]]
 then
     command+=" --ks $ks"
 fi
-echo "Formatting input for PLINK"
+
+echo "============================================="
+echo "[$(date)] - STEP1. Formatting input for PLINK"
+echo $command
 eval $command
 k_max=$(awk 'NR==1{max = $1 + 0; next} {if ($1 > max) max = $1;} END {print max}' ${res_folder}ks.csv)
 
 ### Applies PLINK to generate a test statistic reflecting the relationship between each allele and a single NAMPC                  
 mkdir -p ${res_folder}plink_per_nampc
 command="plink2 --pfile ${gtypes} --pheno ${res_folder}nampcs.csv --glm --prune --out ${res_folder}plink_per_nampc/NAM"
+
+echo "============================================="
+echo "[$(date)] - STEP2. Run plink association for NAMPC"
 echo $command
 eval $command
 
@@ -73,7 +80,10 @@ eval $command
 command="Rscript ${SCRIPT_DIR}/joint_test.R --outfile ${res_folder}P_k.txt \
          --chisq_per_nampc_file ${res_folder}t_per_nampc.txt \
          --ks_file ${res_folder}ks.csv"
-echo "Performing multi-NAM-PC tests"
+
+echo "============================================="
+echo "[$(date)] - STEP3. multi-NAM-PC tests"
+echo $command
 eval $command
 
 ### Assemble results file
@@ -92,7 +102,10 @@ do
     command+=" <(awk '{print \$9}' ${res_folder}plink_per_nampc/NAM.PC${n_nampc}.glm.linear | awk '(NR==1){gsub($awk_str, \$0);}{print;}' )"
 done
 command+=" > ${res_folder}GeNA_sumstats.txt"
-echo "Assembling GeNA results file"                                                                                                
+
+echo "============================================="
+echo "[$(date)] - STEP4. Assembling GeNA results file"
+echo $command                                                                                               
 eval $command
 
 ### Clean up
