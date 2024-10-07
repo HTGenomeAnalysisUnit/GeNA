@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 ### Parse arguments
 covs=""
 corr_batch="False"                                                                                                                                                               
@@ -66,7 +68,7 @@ echo "Gathering metrics across NAM-PCs"
 eval $command
 
 ### Multi-nampc test
-command="Rscript joint_test.R --outfile ${res_folder}P_k.txt \
+command="Rscript $SCRIPT_DIR/joint_test.R --outfile ${res_folder}P_k.txt \
          --chisq_per_nampc_file ${res_folder}t_per_nampc.txt \
          --ks_file ${res_folder}ks.csv"
 echo "Performing multi-NAM-PC tests"
