@@ -8,6 +8,7 @@ covs=""
 corr_batch="False"                                                                                                                                                               
 ks=""
 sampleid="id"
+cleanup="Y"
 while [[ "$#" -gt 0 ]]
   do
     case $1 in
@@ -18,10 +19,13 @@ while [[ "$#" -gt 0 ]]
       -c|--covs) covs="$2"; shift;;
       -b|--corr_batch) corr_batch="$2"; shift;;
       -k|--ks) ks="$2"; shift;;
+      -r|--remove_tmp) cleanup="$2"; shift;;
     esac
     shift
 done
-args_str="Genotypes: $gtypes \nSingle-cell data object: $sc_object \nSample id: $sampleid \nOutput folder: $res_folder \nCorrect for batch: $corr_batch \n"
+
+cmd_log_file="${res_folder}/commands.sh"
+args_str="Genotypes: $gtypes \nSingle-cell data object: $sc_object \nSample id: $sampleid \nOutput folder: $res_folder \nCorrect for batch: $corr_batch \nCleanup: $cleanup \nCommand log: $cmd_log_file \n"
 if [[ -z "$covs" ]]
 then
     args_str+="Covariates: None\n"
@@ -55,6 +59,8 @@ fi
 echo "============================================="
 echo "[$(date)] - STEP1. Formatting input for PLINK"
 echo $command
+echo "# STEP1. Formatting input for PLINK" > $cmd_log_file
+echo $command >> $cmd_log_file
 eval $command
 k_max=$(awk 'NR==1{max = $1 + 0; next} {if ($1 > max) max = $1;} END {print max}' ${res_folder}ks.csv)
 
@@ -65,6 +71,8 @@ command="plink2 --pfile ${gtypes} --pheno ${res_folder}nampcs.csv --glm allow-no
 echo "============================================="
 echo "[$(date)] - STEP2. Run plink association for NAMPC"
 echo $command
+echo "# STEP2. Run plink association for NAMPC" >> $cmd_log_file
+echo $command >> $cmd_log_file
 eval $command
 
 command="paste"
@@ -74,6 +82,8 @@ do
 done
 command+="> ${res_folder}t_per_nampc.txt"
 echo "Gathering metrics across NAM-PCs"
+echo "# Gathering metrics across NAM-PCs" >> $cmd_log_file
+echo $command >> $cmd_log_file
 eval $command
 
 ### Multi-nampc test
@@ -84,6 +94,8 @@ command="Rscript ${SCRIPT_DIR}/joint_test.R --outfile ${res_folder}P_k.txt \
 echo "============================================="
 echo "[$(date)] - STEP3. multi-NAM-PC tests"
 echo $command
+echo "# STEP3. multi-NAM-PC tests"  >> $cmd_log_file
+echo $command >> $cmd_log_file
 eval $command
 
 ### Assemble results file
@@ -105,11 +117,16 @@ command+=" > ${res_folder}GeNA_sumstats.txt"
 
 echo "============================================="
 echo "[$(date)] - STEP4. Assembling GeNA results file"
-echo $command                                                                                               
+echo "# STEP4. Assembling GeNA results file" >> $cmd_log_file"
+echo $command >> $cmd_log_file                                                                                              
 eval $command
 
 ### Clean up
-command="rm ${res_folder}P_k.txt"
-eval $command
-command="rm ${res_folder}t_per_nampc.txt"
-eval $command
+if [[ "$cleanup" == "Y" ]] 
+then
+  echo "Clean up temp files"
+  command="rm ${res_folder}P_k.txt"
+  eval $command
+  command="rm ${res_folder}t_per_nampc.txt"
+  eval $command
+fi
