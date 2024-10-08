@@ -109,7 +109,7 @@ echo "# STEP4. Assembling GeNA results file" >> $cmd_log_file"
 command="paste"
 for i_col in $(eval echo "{1..8}") # SNP information columns
 do
-    command+=" <(awk '{print \$$i_col}' ${res_folder}/plink_per_nampc/NAM.PC1.glm.linear)"
+    command+=" <(awk '{print \$i_col}' ${res_folder}/plink_per_nampc/NAM.PC1.glm.linear)"
 done
 command+=" ${res_folder}/P_k.txt" 
 
