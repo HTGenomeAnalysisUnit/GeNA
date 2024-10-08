@@ -107,9 +107,9 @@ echo "[$(date)] - STEP4. Assembling GeNA results file"
 echo "# STEP4. Assembling GeNA results file" >> $cmd_log_file
 
 command="paste"
-for i_col in $(eval echo "{1..8}") # SNP information columns
+for i_col in $(eval echo "{1..5} 7 9 10 11") # SNP information columns
 do
-    command+=" <(awk '{print \$i_col}' ${res_folder}/plink_per_nampc/NAM.PC1.glm.linear)"
+    command+=" <(awk '{print \$$i_col}' ${res_folder}/plink_per_nampc/NAM.PC1.glm.linear)"
 done
 command+=" ${res_folder}/P_k.txt" 
 
@@ -118,7 +118,7 @@ do
     awk_str='"BETA", "BETA_NAMPC'
     awk_str+=$(echo $n_nampc)
     awk_str+='"'
-    command+=" <(awk '{print \$9}' ${res_folder}/plink_per_nampc/NAM.PC${n_nampc}.glm.linear | awk '(NR==1){gsub($awk_str, \$0);}{print;}' )"
+    command+=" <(awk '{print \$12}' ${res_folder}/plink_per_nampc/NAM.PC${n_nampc}.glm.linear | awk '(NR==1){gsub($awk_str, \$0);}{print;}' )"
 done
 command+=" > ${res_folder}/GeNA_sumstats.txt"
 
