@@ -42,6 +42,10 @@ printf "Arguments provided:\n"
 printf "$args_str"
 
 ### Format inputs to PLINK
+echo "============================================="
+echo "[$(date)] - STEP1. Formatting input for PLINK"
+echo "# STEP1. Formatting input for PLINK" > $cmd_log_file
+
 command="python3 -u ${SCRIPT_DIR}/export_nampcs.py --res_folder ${res_folder} --sc_object_path ${sc_object} --sampleid ${sampleid}"
 if [[ "$corr_batch" == "True" ]]
 then
@@ -56,22 +60,20 @@ then
     command+=" --ks $ks"
 fi
 
-echo "============================================="
-echo "[$(date)] - STEP1. Formatting input for PLINK"
 echo $command
-echo "# STEP1. Formatting input for PLINK" > $cmd_log_file
 echo $command >> $cmd_log_file
 eval $command
 k_max=$(awk 'NR==1{max = $1 + 0; next} {if ($1 > max) max = $1;} END {print max}' ${res_folder}ks.csv)
 
-### Applies PLINK to generate a test statistic reflecting the relationship between each allele and a single NAMPC                  
+### Applies PLINK to generate a test statistic reflecting the relationship between each allele and a single NAMPC
+echo "============================================="
+echo "[$(date)] - STEP2. Run plink association for NAMPC"
+echo "# STEP2. Run plink association for NAMPC" >> $cmd_log_file
+
 mkdir -p ${res_folder}plink_per_nampc
 command="plink2 --pfile ${gtypes} --pheno ${res_folder}nampcs.csv --glm allow-no-covars --prune --out ${res_folder}plink_per_nampc/NAM"
 
-echo "============================================="
-echo "[$(date)] - STEP2. Run plink association for NAMPC"
 echo $command
-echo "# STEP2. Run plink association for NAMPC" >> $cmd_log_file
 echo $command >> $cmd_log_file
 eval $command
 
@@ -87,18 +89,23 @@ echo $command >> $cmd_log_file
 eval $command
 
 ### Multi-nampc test
+echo "============================================="
+echo "[$(date)] - STEP3. multi-NAM-PC tests"
+echo "# STEP3. multi-NAM-PC tests"  >> $cmd_log_file
+
 command="Rscript ${SCRIPT_DIR}/joint_test.R --outfile ${res_folder}P_k.txt \
          --chisq_per_nampc_file ${res_folder}t_per_nampc.txt \
          --ks_file ${res_folder}ks.csv"
 
-echo "============================================="
-echo "[$(date)] - STEP3. multi-NAM-PC tests"
 echo $command
-echo "# STEP3. multi-NAM-PC tests"  >> $cmd_log_file
 echo $command >> $cmd_log_file
 eval $command
 
 ### Assemble results file
+echo "============================================="
+echo "[$(date)] - STEP4. Assembling GeNA results file"
+echo "# STEP4. Assembling GeNA results file" >> $cmd_log_file"
+
 command="paste"
 for i_col in $(eval echo "{1..8}") # SNP information columns
 do
@@ -113,11 +120,34 @@ do
     awk_str+='"'
     command+=" <(awk '{print \$9}' ${res_folder}plink_per_nampc/NAM.PC${n_nampc}.glm.linear | awk '(NR==1){gsub($awk_str, \$0);}{print;}' )"
 done
-command+=" > ${res_folder}GeNA_sumstats.txt"
+command+=" > ${res_folder}/GeNA_sumstats.txt"
+
+echo $command >> $cmd_log_file                                                                                              
+eval $command
 
 echo "============================================="
-echo "[$(date)] - STEP4. Assembling GeNA results file"
-echo "# STEP4. Assembling GeNA results file" >> $cmd_log_file"
+echo "[$(date)] - STEP5. Loci pruning"
+echo "# STEP5. Loci pruning" >> $cmd_log_file"
+
+command="plink2 --pfile ${gtypes} --clump ${res_folder}/GeNA_sumstats.txt --clump-p1 1e-5 --clump-kb 500 --clump-p2 1e-3 --out ${res_folder}/GeNA_sumstats.clump"
+echo $command >> $cmd_log_file                                                                                              
+eval $command
+
+echo "Extract significant loci with index SNP P < 5e-8 and at least 5 SNPs"
+echo "# Extract significant loci with index SNP P < 5e-8 and at least 5 SNPs" >> $cmd_log_file 
+command="awk 'NR == 1 || (\$5 >= 5 && \$4 <= 5e-8)' ${res_folder}/GeNA_sumstats.clump.clumps > ${res_folder}/GeNA_sumstats.clump.clumps.filtered.tsv"
+echo $command >> $cmd_log_file                                                                                              
+eval $command
+
+command="cut -f3 ${res_folder}/GeNA_sumstats.clump.clumps.filtered.tsv | tail -n+2 > ${res_folder}/GeNA_sumstats.clump.clumps.filtered.indexsnps"
+echo $command >> $cmd_log_file                                                                                              
+eval $command
+
+echo "============================================="
+echo "[$(date)] - STEP6. Extract index SNPs genotypes"
+echo "# STEP6. Extract index SNPs genotypes" >> $cmd_log_file"
+
+command="plink2 --pfile ${gtypes} --extract ${res_folder}/GeNA_sumstats.clump.clumps.filtered.indexsnps --export A --out ${res_folder}/GeNA_sumstats.clump.clumps.filtered.indexsnps.recodeA"
 echo $command >> $cmd_log_file                                                                                              
 eval $command
 
