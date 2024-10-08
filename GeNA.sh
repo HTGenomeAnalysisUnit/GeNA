@@ -80,7 +80,7 @@ eval $command
 command="paste"
 for n_nampc in $(eval echo "{1..$k_max}")
 do
-    command+=" <(awk 'NR>1 {print \$11}' ${res_folder}/plink_per_nampc/NAM.PC${n_nampc}.glm.linear )"
+    command+=" <(awk 'NR>1 {print \$12}' ${res_folder}/plink_per_nampc/NAM.PC${n_nampc}.glm.linear )"
 done
 command+="> ${res_folder}/t_per_nampc.txt"
 echo "Gathering metrics across NAM-PCs"
