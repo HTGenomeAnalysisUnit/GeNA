@@ -1,6 +1,7 @@
 suppressPackageStartupMessages({
 	library(argparse)
 	library(Rmpfr)
+	library(data.table)
 })
 set.seed(0)
 
@@ -12,23 +13,25 @@ parser$add_argument("--outfile",type="character")
 args <- parser$parse_args()
 
 # Import
-all_res = read.table(args$chisq_per_nampc_file, header=FALSE) # T values
+all_res = fread(args$chisq_per_nampc_file, header=FALSE) # T values
 all_res = all_res**2 # T-squared
 ks = read.table(args$ks_file, header=FALSE)[,1]
 
 # Evaluate multi-NAM-PC associations across SNPs
 for(k in ks){
-    all_res[paste0("k",k,"_P")] = apply(as.matrix(rowSums(all_res[,c(1:k), drop=FALSE]), ncol=1), 1, pchisq, df = k, lower = F)
+    all_res[[paste0("k",k,"_P")]] = apply(as.matrix(rowSums(all_res[,1:k, drop=FALSE]), ncol=1), 1, pchisq, df = k, lower = F)
 }
-all_res['P'] = apply(as.matrix(all_res[,paste0("k",ks,"_P"), drop=FALSE], ncol=length(ks)), 1, min)
+col_names <- paste0("k",ks,"_P")
+all_res[['P']] = apply(as.matrix(all_res[,..col_names, drop=FALSE], ncol=length(ks)), 1, min)
 small_vals = which(all_res[,'P']<1e-15) # If p<2.2e-16, need small-values handling
-all_res['P'] = 1-(1-all_res['P'])**length(ks) # Multiple testing correction across values for k
-all_res['k']= apply(as.matrix(all_res[,paste0("k",ks,"_P"), drop=FALSE], ncol=length(ks)), 1, which.min)
-all_res['k'] = ks[all_res$k]
+all_res[['P']] = 1-(1-all_res[['P']])**length(ks) # Multiple testing correction across values for k
+all_res[['k']]= apply(as.matrix(all_res[,..col_names, drop=FALSE], ncol=length(ks)), 1, which.min)
+all_res$k <- as.numeric(all_res$k)
+all_res[['k']] = ks[all_res$k]
 
 # Small-values handling with precision
 for(k in ks){ # Define sum of Tsq for each value of k considered
-    all_res[paste0('k',k,'_sumTsq')] = apply(as.matrix(rowSums(all_res[,c(1:k), drop=FALSE]), ncol=1), 1, sum)
+    all_res[[paste0('k',k,'_sumTsq')]] = apply(as.matrix(rowSums(all_res[,1:k, drop=FALSE]), ncol=1), 1, sum)
 }
 
 p_mht_corrected <-function(sumTsq_vec, ks, prec_bits = 10000){
@@ -46,6 +49,9 @@ p_mht_corrected <-function(sumTsq_vec, ks, prec_bits = 10000){
     return(c(corr_p, sel_k))
 }
 
-all_res[small_vals,c("P", "k")] = t(apply(as.matrix(all_res[small_vals,paste0("k",ks,"_sumTsq"), drop=FALSE], ncol=length(ks)), 1, p_mht_corrected, ks))
+col_names <- paste0("k",ks,"_sumTsq")
+mtx <- t(apply(as.matrix(all_res[small_vals,..col_names, drop=FALSE], ncol=length(ks)), 1, p_mht_corrected, ks))
+all_res[small_vals, P := mtx[, 1]]
+all_res[small_vals, k := mtx[, 2]]
 
-write.table(all_res[,c("P", "k")], args$outfile, quote=FALSE, row.names=FALSE, sep = "\t")
+fwrite(all_res[,c("P", "k")], args$outfile, quote=FALSE, row.names=FALSE, sep = "\t")
