@@ -63,15 +63,15 @@ fi
 echo $command
 echo $command >> $cmd_log_file
 eval $command
-k_max=$(awk 'NR==1{max = $1 + 0; next} {if ($1 > max) max = $1;} END {print max}' ${res_folder}ks.csv)
+k_max=$(awk 'NR==1{max = $1 + 0; next} {if ($1 > max) max = $1;} END {print max}' ${res_folder}/ks.csv)
 
 ### Applies PLINK to generate a test statistic reflecting the relationship between each allele and a single NAMPC
 echo "============================================="
 echo "[$(date)] - STEP2. Run plink association for NAMPC"
 echo "# STEP2. Run plink association for NAMPC" >> $cmd_log_file
 
-mkdir -p ${res_folder}plink_per_nampc
-command="plink2 --pfile ${gtypes} --pheno ${res_folder}nampcs.csv --glm allow-no-covars --prune --out ${res_folder}plink_per_nampc/NAM"
+mkdir -p ${res_folder}/plink_per_nampc
+command="plink2 --pfile ${gtypes} --pheno ${res_folder}/nampcs.csv --glm allow-no-covars --prune --out ${res_folder}/plink_per_nampc/NAM"
 
 echo $command
 echo $command >> $cmd_log_file
@@ -80,9 +80,9 @@ eval $command
 command="paste"
 for n_nampc in $(eval echo "{1..$k_max}")
 do
-    command+=" <(awk 'NR>1 {print \$11}' ${res_folder}plink_per_nampc/NAM.PC${n_nampc}.glm.linear )"
+    command+=" <(awk 'NR>1 {print \$11}' ${res_folder}/plink_per_nampc/NAM.PC${n_nampc}.glm.linear )"
 done
-command+="> ${res_folder}t_per_nampc.txt"
+command+="> ${res_folder}/t_per_nampc.txt"
 echo "Gathering metrics across NAM-PCs"
 echo "# Gathering metrics across NAM-PCs" >> $cmd_log_file
 echo $command >> $cmd_log_file
@@ -93,9 +93,9 @@ echo "============================================="
 echo "[$(date)] - STEP3. multi-NAM-PC tests"
 echo "# STEP3. multi-NAM-PC tests"  >> $cmd_log_file
 
-command="Rscript ${SCRIPT_DIR}/joint_test.R --outfile ${res_folder}P_k.txt \
-         --chisq_per_nampc_file ${res_folder}t_per_nampc.txt \
-         --ks_file ${res_folder}ks.csv"
+command="Rscript ${SCRIPT_DIR}/joint_test.R --outfile ${res_folder}/P_k.txt \
+         --chisq_per_nampc_file ${res_folder}/t_per_nampc.txt \
+         --ks_file ${res_folder}/ks.csv"
 
 echo $command
 echo $command >> $cmd_log_file
@@ -109,16 +109,16 @@ echo "# STEP4. Assembling GeNA results file" >> $cmd_log_file"
 command="paste"
 for i_col in $(eval echo "{1..8}") # SNP information columns
 do
-    command+=" <(awk '{print \$$i_col}' ${res_folder}plink_per_nampc/NAM.PC1.glm.linear)"
+    command+=" <(awk '{print \$$i_col}' ${res_folder}/plink_per_nampc/NAM.PC1.glm.linear)"
 done
-command+=" ${res_folder}P_k.txt" 
+command+=" ${res_folder}/P_k.txt" 
 
 for n_nampc in $(eval echo "{1..$k_max}")
 do
     awk_str='"BETA", "BETA_NAMPC'
     awk_str+=$(echo $n_nampc)
     awk_str+='"'
-    command+=" <(awk '{print \$9}' ${res_folder}plink_per_nampc/NAM.PC${n_nampc}.glm.linear | awk '(NR==1){gsub($awk_str, \$0);}{print;}' )"
+    command+=" <(awk '{print \$9}' ${res_folder}/plink_per_nampc/NAM.PC${n_nampc}.glm.linear | awk '(NR==1){gsub($awk_str, \$0);}{print;}' )"
 done
 command+=" > ${res_folder}/GeNA_sumstats.txt"
 
@@ -155,8 +155,8 @@ eval $command
 if [[ "$cleanup" == "Y" ]] 
 then
   echo "Clean up temp files"
-  command="rm ${res_folder}P_k.txt"
+  command="rm ${res_folder}/P_k.txt"
   eval $command
-  command="rm ${res_folder}t_per_nampc.txt"
+  command="rm ${res_folder}/t_per_nampc.txt"
   eval $command
 fi
