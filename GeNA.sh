@@ -104,7 +104,7 @@ eval $command
 ### Assemble results file
 echo "============================================="
 echo "[$(date)] - STEP4. Assembling GeNA results file"
-echo "# STEP4. Assembling GeNA results file" >> $cmd_log_file"
+echo "# STEP4. Assembling GeNA results file" >> $cmd_log_file
 
 command="paste"
 for i_col in $(eval echo "{1..8}") # SNP information columns
@@ -127,7 +127,7 @@ eval $command
 
 echo "============================================="
 echo "[$(date)] - STEP5. Loci pruning"
-echo "# STEP5. Loci pruning" >> $cmd_log_file"
+echo "# STEP5. Loci pruning" >> $cmd_log_file
 
 command="plink2 --pfile ${gtypes} --clump ${res_folder}/GeNA_sumstats.txt --clump-p1 1e-5 --clump-kb 500 --clump-p2 1e-3 --out ${res_folder}/GeNA_sumstats.clump"
 echo $command >> $cmd_log_file                                                                                              
@@ -145,7 +145,7 @@ eval $command
 
 echo "============================================="
 echo "[$(date)] - STEP6. Extract index SNPs genotypes"
-echo "# STEP6. Extract index SNPs genotypes" >> $cmd_log_file"
+echo "# STEP6. Extract index SNPs genotypes" >> $cmd_log_file
 
 command="plink2 --pfile ${gtypes} --extract ${res_folder}/GeNA_sumstats.clump.clumps.filtered.indexsnps --export A --out ${res_folder}/GeNA_sumstats.clump.clumps.filtered.indexsnps.recodeA"
 echo $command >> $cmd_log_file                                                                                              
