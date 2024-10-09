@@ -13,6 +13,7 @@ parser.add_argument("--sc_object_path",type=str) # path to single-cell input obj
 parser.add_argument("--covs",type=str,default=None) # list of covariates
 parser.add_argument("--corr_batch",type=bool, default=False) # whether to correct for batch 
 parser.add_argument("--sampleid",type=str, default='id') # column in obs containing sample id. Must match index name of samplem in MultiAnnData
+parser.add_argument("--use_custom_connectivities",type=str, default=None) #Set this if you have connectivities and distances saved with a special prefix
 parser.add_argument("--ks",type=str, default=None) # user-defined values
 args = parser.parse_args()
 
@@ -22,6 +23,12 @@ d = mad.MultiAnnData(sc.read(args.sc_object_path), sampleid=args.sampleid)
 if args.covs is not None:
     args.covs = args.covs.split(",")
     args.covs = d.samplem[args.covs] # note: assumes provided format is cov1,cov2,cov3 and all cov names are in d.samplem.columns
+
+if args.use_custom_connectivities is not None:
+    prefix = args.use_custom_connectivities
+    print(f"Get connectivities and distances from obsp with prefix {prefix}")
+    d.obsp['connectivities'] = d.obsp[f"{prefix}_connectivities"]
+    d.obsp['distances'] = d.obsp[f"{prefix}_distances"]
 
 # build NAM, compute NAM-PCs adjusted for covariates (and batch if desired), store all NAM-PCs
 print("Computing NAM")
