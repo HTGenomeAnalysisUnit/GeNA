@@ -9,12 +9,14 @@ corr_batch="False"
 ks=""
 sampleid="id"
 cleanup="Y"
+connectivities_prefix=""
 while [[ "$#" -gt 0 ]]
   do
     case $1 in
       -s|--single_cell_data_object) sc_object="$2"; shift;;
       -g|--genotypes) gtypes="$2"; shift;;
       -i|--sampleid) sampleid="$2"; shift;;
+      -u|--connectivities) connectivities_prefix="$2"; shift;;
       -o|--output_folder) res_folder="$2"; shift;;
       -c|--covs) covs="$2"; shift;;
       -b|--corr_batch) corr_batch="$2"; shift;;
@@ -58,6 +60,10 @@ fi
 if [[ ! -z "$ks" ]]
 then
     command+=" --ks $ks"
+fi
+if [[ ! -z "$connectivities_prefix" ]]
+then
+    command+=" --use_custom_connectivities $connectivities_prefix"
 fi
 
 echo $command
