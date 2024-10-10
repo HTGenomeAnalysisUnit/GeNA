@@ -74,7 +74,7 @@ k_max=$(awk 'NR==1{max = $1 + 0; next} {if ($1 > max) max = $1;} END {print max}
 ### Applies PLINK to generate a test statistic reflecting the relationship between each allele and a single NAMPC
 echo "============================================="
 echo "[$(date)] - STEP2. Run plink association for NAMPC"
-echo "# STEP2. Run plink association for NAMPC" >> $cmd_log_file
+echo "\n# STEP2. Run plink association for NAMPC" >> $cmd_log_file
 
 mkdir -p ${res_folder}/plink_per_nampc
 command="plink2 --pfile ${gtypes} --pheno ${res_folder}/nampcs.csv --glm allow-no-covars --prune --out ${res_folder}/plink_per_nampc/NAM"
@@ -97,7 +97,7 @@ eval $command
 ### Multi-nampc test
 echo "============================================="
 echo "[$(date)] - STEP3. multi-NAM-PC tests"
-echo "# STEP3. multi-NAM-PC tests"  >> $cmd_log_file
+echo "\n# STEP3. multi-NAM-PC tests"  >> $cmd_log_file
 
 command="Rscript ${SCRIPT_DIR}/joint_test.R --outfile ${res_folder}/P_k.txt \
          --chisq_per_nampc_file ${res_folder}/t_per_nampc.txt \
@@ -110,7 +110,7 @@ eval $command
 ### Assemble results file
 echo "============================================="
 echo "[$(date)] - STEP4. Assembling GeNA results file"
-echo "# STEP4. Assembling GeNA results file" >> $cmd_log_file
+echo "\n# STEP4. Assembling GeNA results file" >> $cmd_log_file
 
 command="paste"
 for i_col in $(eval echo "{1..5} 7 9 10 11") # SNP information columns
@@ -133,14 +133,14 @@ eval $command
 
 echo "============================================="
 echo "[$(date)] - STEP5. Loci pruning"
-echo "# STEP5. Loci pruning" >> $cmd_log_file
+echo "\n# STEP5. Loci pruning" >> $cmd_log_file
 
 command="plink2 --pfile ${gtypes} --clump ${res_folder}/GeNA_sumstats.txt --clump-p1 1e-5 --clump-kb 500 --clump-p2 1e-3 --out ${res_folder}/GeNA_sumstats.clump"
 echo $command >> $cmd_log_file                                                                                              
 eval $command
 
 echo "Extract significant loci with index SNP P < 5e-8 and at least 5 SNPs"
-echo "# Extract significant loci with index SNP P < 5e-8 and at least 5 SNPs" >> $cmd_log_file 
+echo "\n# Extract significant loci with index SNP P < 5e-8 and at least 5 SNPs" >> $cmd_log_file 
 command="awk 'NR == 1 || (\$5 >= 5 && \$4 <= 5e-8)' ${res_folder}/GeNA_sumstats.clump.clumps > ${res_folder}/GeNA_sumstats.clump.clumps.filtered.tsv"
 echo $command >> $cmd_log_file                                                                                              
 eval $command
@@ -151,7 +151,7 @@ eval $command
 
 echo "============================================="
 echo "[$(date)] - STEP6. Extract index SNPs genotypes"
-echo "# STEP6. Extract index SNPs genotypes" >> $cmd_log_file
+echo "\n# STEP6. Extract index SNPs genotypes" >> $cmd_log_file
 
 command="plink2 --pfile ${gtypes} --extract ${res_folder}/GeNA_sumstats.clump.clumps.filtered.indexsnps --export A --out ${res_folder}/GeNA_sumstats.clump.clumps.filtered.indexsnps.recodeA"
 echo $command >> $cmd_log_file                                                                                              
